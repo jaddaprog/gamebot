@@ -1,0 +1,9 @@
+{
+  "name": "@nexus/bot",
+  "version": "0.1.0",
+  "main": "index.js",
+  "private": true,
+  "scripts": {
+    "start": "node index.js"
+  }
+}

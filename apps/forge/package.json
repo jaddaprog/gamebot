@@ -1,0 +1,8 @@
+{
+  "name": "@nexus/forge",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo \"Start your frontend dev server from this package (Next/Vite)\""
+  }
+}

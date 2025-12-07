@@ -1,0 +1,14 @@
+{
+  "name": "nexus-core",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "supabase/functions/*"
+  ],
+  "scripts": {
+    "dev": "echo \"Run individual app dev commands from their folders\"",
+    "lint": "eslint . || true"
+  }
+}
