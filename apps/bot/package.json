@@ -1,0 +1,20 @@
+{
+  "name": "@gamebot/bot",
+  "version": "1.0.0",
+  "description": "Main gamebot application",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "echo 'Run bot in development mode'",
+    "build": "tsc",
+    "test": "echo 'Test bot application'",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@gamebot/core": "1.0.0",
+    "@gamebot/utils": "1.0.0"
+  },
+  "keywords": ["gamebot", "bot"],
+  "author": "",
+  "license": "ISC"
+}
