@@ -1,0 +1,15 @@
+{
+  "name": "@gamebot/utils",
+  "version": "1.0.0",
+  "description": "Utility functions for gamebot",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "echo 'Build utils package'",
+    "test": "echo 'Test utils package'",
+    "clean": "rm -rf dist"
+  },
+  "keywords": ["gamebot", "utils"],
+  "author": "",
+  "license": "ISC"
+}
