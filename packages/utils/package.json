@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "echo 'Build utils package'",
+    "build": "tsc",
     "test": "echo 'Test utils package'",
     "clean": "rm -rf dist"
   },
