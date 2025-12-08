@@ -1115,48 +1115,6 @@ export default function App({ Component, pageProps }: AppProps) {
 }
 </file>
 
-<file path="apps/forge/pages/index.tsx">
-import React from 'react';
-import { AutoForm } from '../src/components/AutoForm';
-import { ItemSchema } from '@nexus/shared';
-
-export default function Home() {
-  const [loading, setLoading] = React.useState(false);
-  const onSubmit = async (data: any) => {
-    setLoading(true);
-    try {
-      const fnUrl = (process.env.NEXT_PUBLIC_SUPABASE_FUNCTION_URL) || '/api/create_item';
-      const resp = await fetch(fnUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      const json = await resp.json().catch(() => ({}));
-      if (!resp.ok) {
-        console.error('Function error', json);
-        alert('Error: ' + JSON.stringify(json));
-      } else {
-        console.log('Created', json);
-        alert('Item created successfully');
-      }
-    } catch (err) {
-      console.error('Submit error', err);
-      alert('Submit failed: ' + String(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div style={{ padding: 24, maxWidth: 900, margin: '0 auto' }}>
-      <h1>The Forge — Create Item</h1>
-      <AutoForm schema={ItemSchema} onSubmit={onSubmit} />
-      {loading && <p>Submitting...</p>}
-    </div>
-  );
-}
-</file>
-
 <file path="apps/forge/src/components/AutoForm.tsx">
 'use client';
 import React from 'react';
@@ -1249,20 +1207,6 @@ export function AutoForm<T extends z.ZodTypeAny>({ schema, onSubmit }: AutoFormP
 <file path="apps/forge/src/styles.css">
 body { background: #0b1220; color: #e6eef8; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
 h1 { font-size: 1.75rem; margin-bottom: 1rem; }
-</file>
-
-<file path="apps/forge/README.md">
-The Forge — Designer Dashboard
-
-This folder is a placeholder for the frontend dashboard (Next.js/Vite).
-
-Files of interest:
-- `src/components/AutoForm.tsx` — auto-generated form component based on Zod schemas.
-
-To start a real dev server, add Next/Vite and appropriate scripts to this package.
-
-Environment variables (local):
-- `NEXT_PUBLIC_SUPABASE_FUNCTION_URL` — URL to the `create_item` Supabase Edge function (e.g., `http://localhost:54321/functions/v1/create_item`).
 </file>
 
 <file path="apps/forge/tsconfig.json">
@@ -1713,6 +1657,48 @@ Gateway Sentinel (Node.js) - Discord bot. Implement the Discord gateway client h
 This is a placeholder README for the bot app.
 </file>
 
+<file path="apps/forge/pages/index.tsx">
+import React from 'react';
+import { AutoForm } from '../src/components/AutoForm';
+import { ItemSchema } from '@nexus/shared';
+
+export default function Home() {
+  const [loading, setLoading] = React.useState(false);
+  const onSubmit = async (data: any) => {
+    setLoading(true);
+    try {
+      const fnUrl = (process.env.NEXT_PUBLIC_SUPABASE_FUNCTION_URL) || '/api/create_item';
+      const resp = await fetch(fnUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const json = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        console.error('Function error', json);
+        alert('Error: ' + JSON.stringify(json));
+      } else {
+        console.log('Created', json);
+        alert('Item created successfully');
+      }
+    } catch (err) {
+      console.error('Submit error', err);
+      alert('Submit failed: ' + String(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ padding: 24, maxWidth: 900, margin: '0 auto' }}>
+      <h1>The Forge — Create Item</h1>
+      <AutoForm schema={ItemSchema} onSubmit={onSubmit} />
+      {loading && <p>Submitting...</p>}
+    </div>
+  );
+}
+</file>
+
 <file path="apps/forge/package.json">
 {
   "name": "@nexus/forge",
@@ -1735,6 +1721,49 @@ This is a placeholder README for the bot app.
     "@types/node": "^20.5.1"
   }
 }
+</file>
+
+<file path="apps/forge/README.md">
+The Forge — Designer Dashboard
+
+This folder is a placeholder for the frontend dashboard (Next.js/Vite).
+
+Files of interest:
+- `src/components/AutoForm.tsx` — auto-generated form component based on Zod schemas.
+
+To start a real dev server, add Next/Vite and appropriate scripts to this package.
+
+Environment variables (local):
+- `NEXT_PUBLIC_SUPABASE_FUNCTION_URL` — URL to the `create_item` Supabase Edge function (e.g., `http://localhost:54321/functions/v1/create_item`).
+</file>
+
+<file path="README.md">
+<<<<<<< HEAD
+# Project Nexus Core: Next-Gen Discord Game Bot
+
+A high-retention, social-first RPG bot leveraging hybrid serverless architecture.
+
+See `docs/` for detailed design and implementation notes.
+
+Getting started:
+
+1. Install dependencies: `pnpm install`
+2. Start local infra: `supabase start`
+3. Reset DB: `supabase db reset`
+=======
+# gamebot
+>>>>>>> origin/main
+# Project Nexus Core: Next-Gen Discord Game Bot
+
+A high-retention, social-first RPG bot leveraging hybrid serverless architecture.
+
+See `docs/` for detailed design and implementation notes.
+
+Getting started:
+
+1. Install dependencies: `pnpm install`
+2. Start local infra: `supabase start`
+3. Reset DB: `supabase db reset`
 </file>
 
 <file path="supabase/functions/create_item/index.ts">
@@ -1862,35 +1891,6 @@ Deploy with:
 ```bash
 supabase functions deploy create_item
 ```
-</file>
-
-<file path="README.md">
-<<<<<<< HEAD
-# Project Nexus Core: Next-Gen Discord Game Bot
-
-A high-retention, social-first RPG bot leveraging hybrid serverless architecture.
-
-See `docs/` for detailed design and implementation notes.
-
-Getting started:
-
-1. Install dependencies: `pnpm install`
-2. Start local infra: `supabase start`
-3. Reset DB: `supabase db reset`
-=======
-# gamebot
->>>>>>> origin/main
-# Project Nexus Core: Next-Gen Discord Game Bot
-
-A high-retention, social-first RPG bot leveraging hybrid serverless architecture.
-
-See `docs/` for detailed design and implementation notes.
-
-Getting started:
-
-1. Install dependencies: `pnpm install`
-2. Start local infra: `supabase start`
-3. Reset DB: `supabase db reset`
 </file>
 
 </files>

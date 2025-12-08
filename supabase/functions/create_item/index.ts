@@ -61,7 +61,8 @@ export default async function (req: Request) {
       rarity: item.rarity,
       slot: item.slot,
       stats: item.stats,
-      abilities: [],
+      // persist abilities provided by the schema (JSONB)
+      abilities: item.abilities ?? [],
       is_tradable: item.isTradable ?? true,
       gold_value: item.goldValue ?? 0,
       tags: item.tags ?? [],
