@@ -1,0 +1,1896 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.devcontainer/
+  devcontainer.json
+  Dockerfile
+.github/
+  workflows/
+    ci.yml
+apps/
+  bot/
+    src/
+      index.ts
+    .env.example
+    index.js
+    package.json
+    README.md
+    tsconfig.json
+  forge/
+    pages/
+      _app.tsx
+      index.tsx
+    src/
+      components/
+        AutoForm.tsx
+      styles.css
+    package.json
+    README.md
+    tsconfig.json
+docs/
+  GAME_BOT_TECHNICAL_SPECS.md
+gamebot/
+  .git/
+    hooks/
+      applypatch-msg.sample
+      commit-msg.sample
+      fsmonitor-watchman.sample
+      post-update.sample
+      pre-applypatch.sample
+      pre-commit.sample
+      pre-merge-commit.sample
+      pre-push.sample
+      pre-rebase.sample
+      pre-receive.sample
+      prepare-commit-msg.sample
+      push-to-checkout.sample
+      update.sample
+    info/
+      exclude
+    logs/
+      refs/
+        heads/
+          main
+        remotes/
+          origin/
+            HEAD
+      HEAD
+    objects/
+      pack/
+        pack-29af8c928db5da155c3358da4d129d22e86a4c90.idx
+        pack-29af8c928db5da155c3358da4d129d22e86a4c90.pack
+    refs/
+      heads/
+        main
+      remotes/
+        origin/
+          HEAD
+    config
+    description
+    HEAD
+    index
+    packed-refs
+  README.md
+packages/
+  shared/
+    schemas/
+      item.ts
+      quest.ts
+    index.ts
+    package.json
+supabase/
+  functions/
+    create_item/
+      index.ts
+    README.md
+  migrations/
+    20251207000000_init_nexus.sql
+.gitignore
+package.json
+pnpm-workspace.yaml
+README.md
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="gamebot/.git/hooks/applypatch-msg.sample">
+#!/bin/sh
+#
+# An example hook script to check the commit log message taken by
+# applypatch from an e-mail message.
+#
+# The hook should exit with non-zero status after issuing an
+# appropriate message if it wants to stop the commit.  The hook is
+# allowed to edit the commit message file.
+#
+# To enable this hook, rename this file to "applypatch-msg".
+
+. git-sh-setup
+commitmsg="$(git rev-parse --git-path hooks/commit-msg)"
+test -x "$commitmsg" && exec "$commitmsg" ${1+"$@"}
+:
+</file>
+
+<file path="gamebot/.git/hooks/commit-msg.sample">
+#!/bin/sh
+#
+# An example hook script to check the commit log message.
+# Called by "git commit" with one argument, the name of the file
+# that has the commit message.  The hook should exit with non-zero
+# status after issuing an appropriate message if it wants to stop the
+# commit.  The hook is allowed to edit the commit message file.
+#
+# To enable this hook, rename this file to "commit-msg".
+
+# Uncomment the below to add a Signed-off-by line to the message.
+# Doing this in a hook is a bad idea in general, but the prepare-commit-msg
+# hook is more suited to it.
+#
+# SOB=$(git var GIT_AUTHOR_IDENT | sed -n 's/^\(.*>\).*$/Signed-off-by: \1/p')
+# grep -qs "^$SOB" "$1" || echo "$SOB" >> "$1"
+
+# This example catches duplicate Signed-off-by lines.
+
+test "" = "$(grep '^Signed-off-by: ' "$1" |
+	 sort | uniq -c | sed -e '/^[ 	]*1[ 	]/d')" || {
+	echo >&2 Duplicate Signed-off-by lines.
+	exit 1
+}
+</file>
+
+<file path="gamebot/.git/hooks/fsmonitor-watchman.sample">
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use IPC::Open2;
+
+# An example hook script to integrate Watchman
+# (https://facebook.github.io/watchman/) with git to speed up detecting
+# new and modified files.
+#
+# The hook is passed a version (currently 2) and last update token
+# formatted as a string and outputs to stdout a new update token and
+# all files that have been modified since the update token. Paths must
+# be relative to the root of the working tree and separated by a single NUL.
+#
+# To enable this hook, rename this file to "query-watchman" and set
+# 'git config core.fsmonitor .git/hooks/query-watchman'
+#
+my ($version, $last_update_token) = @ARGV;
+
+# Uncomment for debugging
+# print STDERR "$0 $version $last_update_token\n";
+
+# Check the hook interface version
+if ($version ne 2) {
+	die "Unsupported query-fsmonitor hook version '$version'.\n" .
+	    "Falling back to scanning...\n";
+}
+
+my $git_work_tree = get_working_dir();
+
+my $retry = 1;
+
+my $json_pkg;
+eval {
+	require JSON::XS;
+	$json_pkg = "JSON::XS";
+	1;
+} or do {
+	require JSON::PP;
+	$json_pkg = "JSON::PP";
+};
+
+launch_watchman();
+
+sub launch_watchman {
+	my $o = watchman_query();
+	if (is_work_tree_watched($o)) {
+		output_result($o->{clock}, @{$o->{files}});
+	}
+}
+
+sub output_result {
+	my ($clockid, @files) = @_;
+
+	# Uncomment for debugging watchman output
+	# open (my $fh, ">", ".git/watchman-output.out");
+	# binmode $fh, ":utf8";
+	# print $fh "$clockid\n@files\n";
+	# close $fh;
+
+	binmode STDOUT, ":utf8";
+	print $clockid;
+	print "\0";
+	local $, = "\0";
+	print @files;
+}
+
+sub watchman_clock {
+	my $response = qx/watchman clock "$git_work_tree"/;
+	die "Failed to get clock id on '$git_work_tree'.\n" .
+		"Falling back to scanning...\n" if $? != 0;
+
+	return $json_pkg->new->utf8->decode($response);
+}
+
+sub watchman_query {
+	my $pid = open2(\*CHLD_OUT, \*CHLD_IN, 'watchman -j --no-pretty')
+	or die "open2() failed: $!\n" .
+	"Falling back to scanning...\n";
+
+	# In the query expression below we're asking for names of files that
+	# changed since $last_update_token but not from the .git folder.
+	#
+	# To accomplish this, we're using the "since" generator to use the
+	# recency index to select candidate nodes and "fields" to limit the
+	# output to file names only. Then we're using the "expression" term to
+	# further constrain the results.
+	my $last_update_line = "";
+	if (substr($last_update_token, 0, 1) eq "c") {
+		$last_update_token = "\"$last_update_token\"";
+		$last_update_line = qq[\n"since": $last_update_token,];
+	}
+	my $query = <<"	END";
+		["query", "$git_work_tree", {$last_update_line
+			"fields": ["name"],
+			"expression": ["not", ["dirname", ".git"]]
+		}]
+	END
+
+	# Uncomment for debugging the watchman query
+	# open (my $fh, ">", ".git/watchman-query.json");
+	# print $fh $query;
+	# close $fh;
+
+	print CHLD_IN $query;
+	close CHLD_IN;
+	my $response = do {local $/; <CHLD_OUT>};
+
+	# Uncomment for debugging the watch response
+	# open ($fh, ">", ".git/watchman-response.json");
+	# print $fh $response;
+	# close $fh;
+
+	die "Watchman: command returned no output.\n" .
+	"Falling back to scanning...\n" if $response eq "";
+	die "Watchman: command returned invalid output: $response\n" .
+	"Falling back to scanning...\n" unless $response =~ /^\{/;
+
+	return $json_pkg->new->utf8->decode($response);
+}
+
+sub is_work_tree_watched {
+	my ($output) = @_;
+	my $error = $output->{error};
+	if ($retry > 0 and $error and $error =~ m/unable to resolve root .* directory (.*) is not watched/) {
+		$retry--;
+		my $response = qx/watchman watch "$git_work_tree"/;
+		die "Failed to make watchman watch '$git_work_tree'.\n" .
+		    "Falling back to scanning...\n" if $? != 0;
+		$output = $json_pkg->new->utf8->decode($response);
+		$error = $output->{error};
+		die "Watchman: $error.\n" .
+		"Falling back to scanning...\n" if $error;
+
+		# Uncomment for debugging watchman output
+		# open (my $fh, ">", ".git/watchman-output.out");
+		# close $fh;
+
+		# Watchman will always return all files on the first query so
+		# return the fast "everything is dirty" flag to git and do the
+		# Watchman query just to get it over with now so we won't pay
+		# the cost in git to look up each individual file.
+		my $o = watchman_clock();
+		$error = $output->{error};
+
+		die "Watchman: $error.\n" .
+		"Falling back to scanning...\n" if $error;
+
+		output_result($o->{clock}, ("/"));
+		$last_update_token = $o->{clock};
+
+		eval { launch_watchman() };
+		return 0;
+	}
+
+	die "Watchman: $error.\n" .
+	"Falling back to scanning...\n" if $error;
+
+	return 1;
+}
+
+sub get_working_dir {
+	my $working_dir;
+	if ($^O =~ 'msys' || $^O =~ 'cygwin') {
+		$working_dir = Win32::GetCwd();
+		$working_dir =~ tr/\\/\//;
+	} else {
+		require Cwd;
+		$working_dir = Cwd::cwd();
+	}
+
+	return $working_dir;
+}
+</file>
+
+<file path="gamebot/.git/hooks/post-update.sample">
+#!/bin/sh
+#
+# An example hook script to prepare a packed repository for use over
+# dumb transports.
+#
+# To enable this hook, rename this file to "post-update".
+
+exec git update-server-info
+</file>
+
+<file path="gamebot/.git/hooks/pre-applypatch.sample">
+#!/bin/sh
+#
+# An example hook script to verify what is about to be committed
+# by applypatch from an e-mail message.
+#
+# The hook should exit with non-zero status after issuing an
+# appropriate message if it wants to stop the commit.
+#
+# To enable this hook, rename this file to "pre-applypatch".
+
+. git-sh-setup
+precommit="$(git rev-parse --git-path hooks/pre-commit)"
+test -x "$precommit" && exec "$precommit" ${1+"$@"}
+:
+</file>
+
+<file path="gamebot/.git/hooks/pre-commit.sample">
+#!/bin/sh
+#
+# An example hook script to verify what is about to be committed.
+# Called by "git commit" with no arguments.  The hook should
+# exit with non-zero status after issuing an appropriate message if
+# it wants to stop the commit.
+#
+# To enable this hook, rename this file to "pre-commit".
+
+if git rev-parse --verify HEAD >/dev/null 2>&1
+then
+	against=HEAD
+else
+	# Initial commit: diff against an empty tree object
+	against=$(git hash-object -t tree /dev/null)
+fi
+
+# If you want to allow non-ASCII filenames set this variable to true.
+allownonascii=$(git config --type=bool hooks.allownonascii)
+
+# Redirect output to stderr.
+exec 1>&2
+
+# Cross platform projects tend to avoid non-ASCII filenames; prevent
+# them from being added to the repository. We exploit the fact that the
+# printable range starts at the space character and ends with tilde.
+if [ "$allownonascii" != "true" ] &&
+	# Note that the use of brackets around a tr range is ok here, (it's
+	# even required, for portability to Solaris 10's /usr/bin/tr), since
+	# the square bracket bytes happen to fall in the designated range.
+	test $(git diff --cached --name-only --diff-filter=A -z $against |
+	  LC_ALL=C tr -d '[ -~]\0' | wc -c) != 0
+then
+	cat <<\EOF
+Error: Attempt to add a non-ASCII file name.
+
+This can cause problems if you want to work with people on other platforms.
+
+To be portable it is advisable to rename the file.
+
+If you know what you are doing you can disable this check using:
+
+  git config hooks.allownonascii true
+EOF
+	exit 1
+fi
+
+# If there are whitespace errors, print the offending file names and fail.
+exec git diff-index --check --cached $against --
+</file>
+
+<file path="gamebot/.git/hooks/pre-merge-commit.sample">
+#!/bin/sh
+#
+# An example hook script to verify what is about to be committed.
+# Called by "git merge" with no arguments.  The hook should
+# exit with non-zero status after issuing an appropriate message to
+# stderr if it wants to stop the merge commit.
+#
+# To enable this hook, rename this file to "pre-merge-commit".
+
+. git-sh-setup
+test -x "$GIT_DIR/hooks/pre-commit" &&
+        exec "$GIT_DIR/hooks/pre-commit"
+:
+</file>
+
+<file path="gamebot/.git/hooks/pre-push.sample">
+#!/bin/sh
+
+# An example hook script to verify what is about to be pushed.  Called by "git
+# push" after it has checked the remote status, but before anything has been
+# pushed.  If this script exits with a non-zero status nothing will be pushed.
+#
+# This hook is called with the following parameters:
+#
+# $1 -- Name of the remote to which the push is being done
+# $2 -- URL to which the push is being done
+#
+# If pushing without using a named remote those arguments will be equal.
+#
+# Information about the commits which are being pushed is supplied as lines to
+# the standard input in the form:
+#
+#   <local ref> <local oid> <remote ref> <remote oid>
+#
+# This sample shows how to prevent push of commits where the log message starts
+# with "WIP" (work in progress).
+
+remote="$1"
+url="$2"
+
+zero=$(git hash-object --stdin </dev/null | tr '[0-9a-f]' '0')
+
+while read local_ref local_oid remote_ref remote_oid
+do
+	if test "$local_oid" = "$zero"
+	then
+		# Handle delete
+		:
+	else
+		if test "$remote_oid" = "$zero"
+		then
+			# New branch, examine all commits
+			range="$local_oid"
+		else
+			# Update to existing branch, examine new commits
+			range="$remote_oid..$local_oid"
+		fi
+
+		# Check for WIP commit
+		commit=$(git rev-list -n 1 --grep '^WIP' "$range")
+		if test -n "$commit"
+		then
+			echo >&2 "Found WIP commit in $local_ref, not pushing"
+			exit 1
+		fi
+	fi
+done
+
+exit 0
+</file>
+
+<file path="gamebot/.git/hooks/pre-rebase.sample">
+#!/bin/sh
+#
+# Copyright (c) 2006, 2008 Junio C Hamano
+#
+# The "pre-rebase" hook is run just before "git rebase" starts doing
+# its job, and can prevent the command from running by exiting with
+# non-zero status.
+#
+# The hook is called with the following parameters:
+#
+# $1 -- the upstream the series was forked from.
+# $2 -- the branch being rebased (or empty when rebasing the current branch).
+#
+# This sample shows how to prevent topic branches that are already
+# merged to 'next' branch from getting rebased, because allowing it
+# would result in rebasing already published history.
+
+publish=next
+basebranch="$1"
+if test "$#" = 2
+then
+	topic="refs/heads/$2"
+else
+	topic=`git symbolic-ref HEAD` ||
+	exit 0 ;# we do not interrupt rebasing detached HEAD
+fi
+
+case "$topic" in
+refs/heads/??/*)
+	;;
+*)
+	exit 0 ;# we do not interrupt others.
+	;;
+esac
+
+# Now we are dealing with a topic branch being rebased
+# on top of master.  Is it OK to rebase it?
+
+# Does the topic really exist?
+git show-ref -q "$topic" || {
+	echo >&2 "No such branch $topic"
+	exit 1
+}
+
+# Is topic fully merged to master?
+not_in_master=`git rev-list --pretty=oneline ^master "$topic"`
+if test -z "$not_in_master"
+then
+	echo >&2 "$topic is fully merged to master; better remove it."
+	exit 1 ;# we could allow it, but there is no point.
+fi
+
+# Is topic ever merged to next?  If so you should not be rebasing it.
+only_next_1=`git rev-list ^master "^$topic" ${publish} | sort`
+only_next_2=`git rev-list ^master           ${publish} | sort`
+if test "$only_next_1" = "$only_next_2"
+then
+	not_in_topic=`git rev-list "^$topic" master`
+	if test -z "$not_in_topic"
+	then
+		echo >&2 "$topic is already up to date with master"
+		exit 1 ;# we could allow it, but there is no point.
+	else
+		exit 0
+	fi
+else
+	not_in_next=`git rev-list --pretty=oneline ^${publish} "$topic"`
+	/usr/bin/perl -e '
+		my $topic = $ARGV[0];
+		my $msg = "* $topic has commits already merged to public branch:\n";
+		my (%not_in_next) = map {
+			/^([0-9a-f]+) /;
+			($1 => 1);
+		} split(/\n/, $ARGV[1]);
+		for my $elem (map {
+				/^([0-9a-f]+) (.*)$/;
+				[$1 => $2];
+			} split(/\n/, $ARGV[2])) {
+			if (!exists $not_in_next{$elem->[0]}) {
+				if ($msg) {
+					print STDERR $msg;
+					undef $msg;
+				}
+				print STDERR " $elem->[1]\n";
+			}
+		}
+	' "$topic" "$not_in_next" "$not_in_master"
+	exit 1
+fi
+
+<<\DOC_END
+
+This sample hook safeguards topic branches that have been
+published from being rewound.
+
+The workflow assumed here is:
+
+ * Once a topic branch forks from "master", "master" is never
+   merged into it again (either directly or indirectly).
+
+ * Once a topic branch is fully cooked and merged into "master",
+   it is deleted.  If you need to build on top of it to correct
+   earlier mistakes, a new topic branch is created by forking at
+   the tip of the "master".  This is not strictly necessary, but
+   it makes it easier to keep your history simple.
+
+ * Whenever you need to test or publish your changes to topic
+   branches, merge them into "next" branch.
+
+The script, being an example, hardcodes the publish branch name
+to be "next", but it is trivial to make it configurable via
+$GIT_DIR/config mechanism.
+
+With this workflow, you would want to know:
+
+(1) ... if a topic branch has ever been merged to "next".  Young
+    topic branches can have stupid mistakes you would rather
+    clean up before publishing, and things that have not been
+    merged into other branches can be easily rebased without
+    affecting other people.  But once it is published, you would
+    not want to rewind it.
+
+(2) ... if a topic branch has been fully merged to "master".
+    Then you can delete it.  More importantly, you should not
+    build on top of it -- other people may already want to
+    change things related to the topic as patches against your
+    "master", so if you need further changes, it is better to
+    fork the topic (perhaps with the same name) afresh from the
+    tip of "master".
+
+Let's look at this example:
+
+		   o---o---o---o---o---o---o---o---o---o "next"
+		  /       /           /           /
+		 /   a---a---b A     /           /
+		/   /               /           /
+	       /   /   c---c---c---c B         /
+	      /   /   /             \         /
+	     /   /   /   b---b C     \       /
+	    /   /   /   /             \     /
+    ---o---o---o---o---o---o---o---o---o---o---o "master"
+
+
+A, B and C are topic branches.
+
+ * A has one fix since it was merged up to "next".
+
+ * B has finished.  It has been fully merged up to "master" and "next",
+   and is ready to be deleted.
+
+ * C has not merged to "next" at all.
+
+We would want to allow C to be rebased, refuse A, and encourage
+B to be deleted.
+
+To compute (1):
+
+	git rev-list ^master ^topic next
+	git rev-list ^master        next
+
+	if these match, topic has not merged in next at all.
+
+To compute (2):
+
+	git rev-list master..topic
+
+	if this is empty, it is fully merged to "master".
+
+DOC_END
+</file>
+
+<file path="gamebot/.git/hooks/pre-receive.sample">
+#!/bin/sh
+#
+# An example hook script to make use of push options.
+# The example simply echoes all push options that start with 'echoback='
+# and rejects all pushes when the "reject" push option is used.
+#
+# To enable this hook, rename this file to "pre-receive".
+
+if test -n "$GIT_PUSH_OPTION_COUNT"
+then
+	i=0
+	while test "$i" -lt "$GIT_PUSH_OPTION_COUNT"
+	do
+		eval "value=\$GIT_PUSH_OPTION_$i"
+		case "$value" in
+		echoback=*)
+			echo "echo from the pre-receive-hook: ${value#*=}" >&2
+			;;
+		reject)
+			exit 1
+		esac
+		i=$((i + 1))
+	done
+fi
+</file>
+
+<file path="gamebot/.git/hooks/prepare-commit-msg.sample">
+#!/bin/sh
+#
+# An example hook script to prepare the commit log message.
+# Called by "git commit" with the name of the file that has the
+# commit message, followed by the description of the commit
+# message's source.  The hook's purpose is to edit the commit
+# message file.  If the hook fails with a non-zero status,
+# the commit is aborted.
+#
+# To enable this hook, rename this file to "prepare-commit-msg".
+
+# This hook includes three examples. The first one removes the
+# "# Please enter the commit message..." help message.
+#
+# The second includes the output of "git diff --name-status -r"
+# into the message, just before the "git status" output.  It is
+# commented because it doesn't cope with --amend or with squashed
+# commits.
+#
+# The third example adds a Signed-off-by line to the message, that can
+# still be edited.  This is rarely a good idea.
+
+COMMIT_MSG_FILE=$1
+COMMIT_SOURCE=$2
+SHA1=$3
+
+/usr/bin/perl -i.bak -ne 'print unless(m/^. Please enter the commit message/..m/^#$/)' "$COMMIT_MSG_FILE"
+
+# case "$COMMIT_SOURCE,$SHA1" in
+#  ,|template,)
+#    /usr/bin/perl -i.bak -pe '
+#       print "\n" . `git diff --cached --name-status -r`
+# 	 if /^#/ && $first++ == 0' "$COMMIT_MSG_FILE" ;;
+#  *) ;;
+# esac
+
+# SOB=$(git var GIT_COMMITTER_IDENT | sed -n 's/^\(.*>\).*$/Signed-off-by: \1/p')
+# git interpret-trailers --in-place --trailer "$SOB" "$COMMIT_MSG_FILE"
+# if test -z "$COMMIT_SOURCE"
+# then
+#   /usr/bin/perl -i.bak -pe 'print "\n" if !$first_line++' "$COMMIT_MSG_FILE"
+# fi
+</file>
+
+<file path="gamebot/.git/hooks/push-to-checkout.sample">
+#!/bin/sh
+
+# An example hook script to update a checked-out tree on a git push.
+#
+# This hook is invoked by git-receive-pack(1) when it reacts to git
+# push and updates reference(s) in its repository, and when the push
+# tries to update the branch that is currently checked out and the
+# receive.denyCurrentBranch configuration variable is set to
+# updateInstead.
+#
+# By default, such a push is refused if the working tree and the index
+# of the remote repository has any difference from the currently
+# checked out commit; when both the working tree and the index match
+# the current commit, they are updated to match the newly pushed tip
+# of the branch. This hook is to be used to override the default
+# behaviour; however the code below reimplements the default behaviour
+# as a starting point for convenient modification.
+#
+# The hook receives the commit with which the tip of the current
+# branch is going to be updated:
+commit=$1
+
+# It can exit with a non-zero status to refuse the push (when it does
+# so, it must not modify the index or the working tree).
+die () {
+	echo >&2 "$*"
+	exit 1
+}
+
+# Or it can make any necessary changes to the working tree and to the
+# index to bring them to the desired state when the tip of the current
+# branch is updated to the new commit, and exit with a zero status.
+#
+# For example, the hook can simply run git read-tree -u -m HEAD "$1"
+# in order to emulate git fetch that is run in the reverse direction
+# with git push, as the two-tree form of git read-tree -u -m is
+# essentially the same as git switch or git checkout that switches
+# branches while keeping the local changes in the working tree that do
+# not interfere with the difference between the branches.
+
+# The below is a more-or-less exact translation to shell of the C code
+# for the default behaviour for git's push-to-checkout hook defined in
+# the push_to_deploy() function in builtin/receive-pack.c.
+#
+# Note that the hook will be executed from the repository directory,
+# not from the working tree, so if you want to perform operations on
+# the working tree, you will have to adapt your code accordingly, e.g.
+# by adding "cd .." or using relative paths.
+
+if ! git update-index -q --ignore-submodules --refresh
+then
+	die "Up-to-date check failed"
+fi
+
+if ! git diff-files --quiet --ignore-submodules --
+then
+	die "Working directory has unstaged changes"
+fi
+
+# This is a rough translation of:
+#
+#   head_has_history() ? "HEAD" : EMPTY_TREE_SHA1_HEX
+if git cat-file -e HEAD 2>/dev/null
+then
+	head=HEAD
+else
+	head=$(git hash-object -t tree --stdin </dev/null)
+fi
+
+if ! git diff-index --quiet --cached --ignore-submodules $head --
+then
+	die "Working directory has staged changes"
+fi
+
+if ! git read-tree -u -m "$commit"
+then
+	die "Could not update working tree to new HEAD"
+fi
+</file>
+
+<file path="gamebot/.git/hooks/update.sample">
+#!/bin/sh
+#
+# An example hook script to block unannotated tags from entering.
+# Called by "git receive-pack" with arguments: refname sha1-old sha1-new
+#
+# To enable this hook, rename this file to "update".
+#
+# Config
+# ------
+# hooks.allowunannotated
+#   This boolean sets whether unannotated tags will be allowed into the
+#   repository.  By default they won't be.
+# hooks.allowdeletetag
+#   This boolean sets whether deleting tags will be allowed in the
+#   repository.  By default they won't be.
+# hooks.allowmodifytag
+#   This boolean sets whether a tag may be modified after creation. By default
+#   it won't be.
+# hooks.allowdeletebranch
+#   This boolean sets whether deleting branches will be allowed in the
+#   repository.  By default they won't be.
+# hooks.denycreatebranch
+#   This boolean sets whether remotely creating branches will be denied
+#   in the repository.  By default this is allowed.
+#
+
+# --- Command line
+refname="$1"
+oldrev="$2"
+newrev="$3"
+
+# --- Safety check
+if [ -z "$GIT_DIR" ]; then
+	echo "Don't run this script from the command line." >&2
+	echo " (if you want, you could supply GIT_DIR then run" >&2
+	echo "  $0 <ref> <oldrev> <newrev>)" >&2
+	exit 1
+fi
+
+if [ -z "$refname" -o -z "$oldrev" -o -z "$newrev" ]; then
+	echo "usage: $0 <ref> <oldrev> <newrev>" >&2
+	exit 1
+fi
+
+# --- Config
+allowunannotated=$(git config --type=bool hooks.allowunannotated)
+allowdeletebranch=$(git config --type=bool hooks.allowdeletebranch)
+denycreatebranch=$(git config --type=bool hooks.denycreatebranch)
+allowdeletetag=$(git config --type=bool hooks.allowdeletetag)
+allowmodifytag=$(git config --type=bool hooks.allowmodifytag)
+
+# check for no description
+projectdesc=$(sed -e '1q' "$GIT_DIR/description")
+case "$projectdesc" in
+"Unnamed repository"* | "")
+	echo "*** Project description file hasn't been set" >&2
+	exit 1
+	;;
+esac
+
+# --- Check types
+# if $newrev is 0000...0000, it's a commit to delete a ref.
+zero=$(git hash-object --stdin </dev/null | tr '[0-9a-f]' '0')
+if [ "$newrev" = "$zero" ]; then
+	newrev_type=delete
+else
+	newrev_type=$(git cat-file -t $newrev)
+fi
+
+case "$refname","$newrev_type" in
+	refs/tags/*,commit)
+		# un-annotated tag
+		short_refname=${refname##refs/tags/}
+		if [ "$allowunannotated" != "true" ]; then
+			echo "*** The un-annotated tag, $short_refname, is not allowed in this repository" >&2
+			echo "*** Use 'git tag [ -a | -s ]' for tags you want to propagate." >&2
+			exit 1
+		fi
+		;;
+	refs/tags/*,delete)
+		# delete tag
+		if [ "$allowdeletetag" != "true" ]; then
+			echo "*** Deleting a tag is not allowed in this repository" >&2
+			exit 1
+		fi
+		;;
+	refs/tags/*,tag)
+		# annotated tag
+		if [ "$allowmodifytag" != "true" ] && git rev-parse $refname > /dev/null 2>&1
+		then
+			echo "*** Tag '$refname' already exists." >&2
+			echo "*** Modifying a tag is not allowed in this repository." >&2
+			exit 1
+		fi
+		;;
+	refs/heads/*,commit)
+		# branch
+		if [ "$oldrev" = "$zero" -a "$denycreatebranch" = "true" ]; then
+			echo "*** Creating a branch is not allowed in this repository" >&2
+			exit 1
+		fi
+		;;
+	refs/heads/*,delete)
+		# delete branch
+		if [ "$allowdeletebranch" != "true" ]; then
+			echo "*** Deleting a branch is not allowed in this repository" >&2
+			exit 1
+		fi
+		;;
+	refs/remotes/*,commit)
+		# tracking branch
+		;;
+	refs/remotes/*,delete)
+		# delete tracking branch
+		if [ "$allowdeletebranch" != "true" ]; then
+			echo "*** Deleting a tracking branch is not allowed in this repository" >&2
+			exit 1
+		fi
+		;;
+	*)
+		# Anything else (is there anything else?)
+		echo "*** Update hook: unknown type of update to ref $refname of type $newrev_type" >&2
+		exit 1
+		;;
+esac
+
+# --- Finished
+exit 0
+</file>
+
+<file path="gamebot/.git/info/exclude">
+# git ls-files --others --exclude-from=.git/info/exclude
+# Lines that start with '#' are comments.
+# For a project mostly in C, the following would be a good set of
+# exclude patterns (uncomment them if you want to use them):
+# *.[oa]
+# *~
+</file>
+
+<file path="gamebot/.git/logs/refs/heads/main">
+0000000000000000000000000000000000000000 b5aeca8fb33ecb40e2ebe7c218b4a4cab4ec1562 jdprog <jessica.dodd.developer@gmail.com> 1765149034 +0000	clone: from github.com:jaddaprog/gamebot.git
+</file>
+
+<file path="gamebot/.git/logs/refs/remotes/origin/HEAD">
+0000000000000000000000000000000000000000 b5aeca8fb33ecb40e2ebe7c218b4a4cab4ec1562 jdprog <jessica.dodd.developer@gmail.com> 1765149034 +0000	clone: from github.com:jaddaprog/gamebot.git
+</file>
+
+<file path="gamebot/.git/logs/HEAD">
+0000000000000000000000000000000000000000 b5aeca8fb33ecb40e2ebe7c218b4a4cab4ec1562 jdprog <jessica.dodd.developer@gmail.com> 1765149034 +0000	clone: from github.com:jaddaprog/gamebot.git
+</file>
+
+<file path="gamebot/.git/refs/heads/main">
+b5aeca8fb33ecb40e2ebe7c218b4a4cab4ec1562
+</file>
+
+<file path="gamebot/.git/refs/remotes/origin/HEAD">
+ref: refs/remotes/origin/main
+</file>
+
+<file path="gamebot/.git/config">
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+[remote "origin"]
+	url = git@github.com:jaddaprog/gamebot.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "main"]
+	remote = origin
+	merge = refs/heads/main
+</file>
+
+<file path="gamebot/.git/description">
+Unnamed repository; edit this file 'description' to name the repository.
+</file>
+
+<file path="gamebot/.git/HEAD">
+ref: refs/heads/main
+</file>
+
+<file path="gamebot/.git/packed-refs">
+# pack-refs with: peeled fully-peeled sorted 
+24ede33006d5c62ac6f52b47dcc8a5da9ce8793f refs/remotes/origin/copilot/setup-mono-repo-structure
+b5aeca8fb33ecb40e2ebe7c218b4a4cab4ec1562 refs/remotes/origin/main
+</file>
+
+<file path="gamebot/README.md">
+# gamebot
+</file>
+
+<file path=".devcontainer/devcontainer.json">
+// See https://containers.dev/implementors/json_reference/ for configuration reference
+{
+	"name": "Untitled Node.js project",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+"remoteUser": "node",
+"features": {
+	"ghcr.io/devcontainers/features/node:1": {},
+	"ghcr.io/devcontainers-extra/features/pnpm:2": {},
+	"ghcr.io/devcontainers-extra/features/supabase-cli:1": {}
+}
+}
+</file>
+
+<file path=".devcontainer/Dockerfile">
+FROM node:20
+
+# Install basic development tools
+RUN apt update && apt install -y less man-db sudo
+
+# Ensure default `node` user has access to `sudo`
+ARG USERNAME=node
+RUN echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
+
+# Set `DEVCONTAINER` environment variable to help with orientation
+ENV DEVCONTAINER=true
+</file>
+
+<file path=".github/workflows/ci.yml">
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - name: Install dependencies
+        run: pnpm install
+      - name: Lint (non-blocking)
+        run: pnpm -w -s lint || true
+</file>
+
+<file path="apps/bot/index.js">
+#!/usr/bin/env node
+"use strict";
+console.log('Gateway Sentinel (bot) placeholder — implement Discord gateway here.');
+
+// Example startup hook
+if (require.main === module) {
+  console.log('Bot entrypoint running. Replace with your bot implementation.');
+}
+</file>
+
+<file path="apps/bot/tsconfig.json">
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*.ts", "../../packages/shared/**/*.ts"]
+}
+</file>
+
+<file path="apps/forge/pages/_app.tsx">
+import '../src/styles.css';
+import type { AppProps } from 'next/app';
+
+export default function App({ Component, pageProps }: AppProps) {
+  return <Component {...pageProps} />;
+}
+</file>
+
+<file path="apps/forge/pages/index.tsx">
+import React from 'react';
+import { AutoForm } from '../src/components/AutoForm';
+import { ItemSchema } from '@nexus/shared';
+
+export default function Home() {
+  const [loading, setLoading] = React.useState(false);
+  const onSubmit = async (data: any) => {
+    setLoading(true);
+    try {
+      const fnUrl = (process.env.NEXT_PUBLIC_SUPABASE_FUNCTION_URL) || '/api/create_item';
+      const resp = await fetch(fnUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const json = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        console.error('Function error', json);
+        alert('Error: ' + JSON.stringify(json));
+      } else {
+        console.log('Created', json);
+        alert('Item created successfully');
+      }
+    } catch (err) {
+      console.error('Submit error', err);
+      alert('Submit failed: ' + String(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ padding: 24, maxWidth: 900, margin: '0 auto' }}>
+      <h1>The Forge — Create Item</h1>
+      <AutoForm schema={ItemSchema} onSubmit={onSubmit} />
+      {loading && <p>Submitting...</p>}
+    </div>
+  );
+}
+</file>
+
+<file path="apps/forge/src/components/AutoForm.tsx">
+'use client';
+import React from 'react';
+import { useForm, SubmitHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+const FieldMapper = ({ name, schema, register, error }: any) => {
+  const def = schema._def;
+
+  if (def.typeName === 'ZodEnum') {
+    return (
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-bold text-gray-300 capitalize">{name}</label>
+        <select 
+          {...register(name)} 
+          className="bg-gray-800 border border-gray-700 rounded p-2 text-white"
+        >
+          {def.values.map((val: string) => (
+            <option key={val} value={val}>{val}</option>
+          ))}
+        </select>
+        {error && <span className="text-red-500 text-xs">{error.message}</span>}
+      </div>
+    );
+  }
+
+  if (def.typeName === 'ZodNumber') {
+    return (
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-bold text-gray-300 capitalize">{name}</label>
+        <input 
+          type="number" 
+          {...register(name, { valueAsNumber: true })} 
+          className="bg-gray-900 border border-gray-700 rounded p-2 text-white"
+        />
+        {error && <span className="text-red-500 text-xs">{error.message}</span>}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-sm font-bold text-gray-300 capitalize">{name}</label>
+      <input 
+        {...register(name)} 
+        className="bg-gray-900 border border-gray-700 rounded p-2 text-white"
+        placeholder={`Enter ${name}...`}
+      />
+      {error && <span className="text-red-500 text-xs">{error.message}</span>}
+    </div>
+  );
+};
+
+interface AutoFormProps<T extends z.ZodTypeAny> {
+  schema: T;
+  onSubmit: SubmitHandler<z.infer<T>>;
+}
+
+export function AutoForm<T extends z.ZodTypeAny>({ schema, onSubmit }: AutoFormProps<T>) {
+  const form = useForm({ resolver: zodResolver(schema) });
+  const shape = (schema as any).shape || {};
+
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-6 bg-gray-800 rounded-lg border border-gray-700">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {Object.keys(shape).map((key) => {
+          if (key === 'id') return null;
+          return (
+            <FieldMapper 
+              key={key} 
+              name={key} 
+              schema={shape[key]} 
+              register={form.register}
+              error={form.formState.errors[key]}
+            />
+          );
+        })}
+      </div>
+      <div className="pt-4 border-t border-gray-700 flex justify-end">
+        <button type="submit" className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded">
+          Forge Item
+        </button>
+      </div>
+    </form>
+  );
+}
+</file>
+
+<file path="apps/forge/src/styles.css">
+body { background: #0b1220; color: #e6eef8; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+h1 { font-size: 1.75rem; margin-bottom: 1rem; }
+</file>
+
+<file path="apps/forge/README.md">
+The Forge — Designer Dashboard
+
+This folder is a placeholder for the frontend dashboard (Next.js/Vite).
+
+Files of interest:
+- `src/components/AutoForm.tsx` — auto-generated form component based on Zod schemas.
+
+To start a real dev server, add Next/Vite and appropriate scripts to this package.
+
+Environment variables (local):
+- `NEXT_PUBLIC_SUPABASE_FUNCTION_URL` — URL to the `create_item` Supabase Edge function (e.g., `http://localhost:54321/functions/v1/create_item`).
+</file>
+
+<file path="apps/forge/tsconfig.json">
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "noEmit": true
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
+}
+</file>
+
+<file path="docs/GAME_BOT_TECHNICAL_SPECS.md">
+# Game Bot Technical Specs
+
+Version: 0.1.0
+Date: 2025-12-07
+
+## Overview
+
+This document describes the current implementation state of the Project Nexus Core (a Discord game bot monorepo). It captures the repository layout, key artifacts created so far, and recommended next steps to move toward a working system.
+
+## Repository Layout (current)
+
+- `package.json` — Root monorepo package config (workspaces configured).
+- `pnpm-workspace.yaml` — pnpm workspace includes `apps/*`, `packages/*`, and `supabase/functions/*`.
+- `.github/workflows/ci.yml` — Basic CI that runs `pnpm install` and a lint step.
+- `packages/shared/` — Shared Zod schemas and type exports:
+  - `package.json` — declares `@nexus/shared` with `zod` dependency.
+  - `schemas/item.ts` — `ItemSchema` with enums, stats, tags, etc.
+  - `schemas/quest.ts` — `QuestSchema` with objectives and rewards.
+  - `index.ts` — re-exports schemas.
+- `supabase/`
+  - `migrations/20251207000000_init_nexus.sql` — initial DB schema (enums, `items`, `quests`, indexes, RLS policies).
+  - `functions/` — placeholder edge functions and example:
+    - `create_item/index.ts` — simple Deno Echo function for testing.
+- `apps/forge/` — Designer dashboard placeholder
+  - `src/components/AutoForm.tsx` — auto-generated React component that maps Zod types to form fields.
+  - `package.json` & `README.md` (placeholders)
+- `apps/bot/` — Gateway Sentinel (Discord bot)
+  - `index.js` — placeholder entry script
+  - `package.json` — minimal package file
+
+## What was done (actions taken)
+
+- Initialized pnpm workspace and root `package.json`.
+- Added `packages/shared` with `Item` and `Quest` Zod schemas.
+- Added Supabase migration SQL for initial schema and RLS policies.
+- Added a simple Supabase Edge Function example (`create_item`) in Deno format.
+- Implemented an `AutoForm` React component in `apps/forge` that consumes Zod schemas to render forms.
+- Scaffoled minimal `apps/bot` entrypoint and placeholder scripts.
+- Added CI workflow (`.github/workflows/ci.yml`).
+- Installed workspace dependencies with `pnpm install`.
+- Initialized the git repository, committed the scaffold, resolved an unrelated-history merge with `origin/main`, pushed to remote, and removed an embedded gitlink submodule (`gamebot`) from the index.
+
+## Current Git State
+
+- Branch: `main` (local `main` tracks `origin/main`).
+- Latest commits include the scaffold, examples, merge commit resolving README conflict, and removal of the embedded gitlink.
+
+## Local Development Quickstart
+
+Prerequisites:
+- Node.js v20+, `pnpm` installed
+- Docker Desktop (for Supabase local)
+- Supabase CLI installed
+
+Commands to get started locally:
+
+1. Install dependencies (root):
+
+```bash
+pnpm install
+```
+
+2. Start local Supabase stack (Docker required):
+
+```bash
+supabase start
+```
+
+3. Apply database migration (this will recreate the DB locally):
+
+```bash
+supabase db reset
+```
+
+4. Run apps individually (placeholders):
+
+Bot (placeholder):
+```bash
+cd apps/bot
+node index.js
+```
+
+Forge (placeholder):
+```bash
+cd apps/forge
+# Start your Next/Vite dev server here once scaffolded
+```
+
+## Environment Variables (examples)
+
+- `DISCORD_TOKEN` — Bot token for Discord gateway.
+- `SUPABASE_URL` and `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` — for Edge Functions and server side access.
+
+## Recommendations / Next Steps
+
+1. Build the minimal Discord bot implementation first (recommended):
+   - Implement a small TypeScript bot in `apps/bot` using `discord.js` or preferred library.
+   - Add a simple command (e.g., `!createitem`) that accepts JSON or structured arguments, validates with `@nexus/shared` `ItemSchema`, and POSTs to the `create_item` function or directly inserts into Supabase.
+   - This will exercise the Zod schemas, migrations, and function endpoints quickly.
+
+2. Harden the Supabase Edge function(s):
+   - Replace the echo function with real validation (import `@nexus/shared`), authentication, and database writes.
+   - Add indexing/Typesense sync logic once a Typesense infra is available.
+
+3. Scaffold `apps/forge` (Next.js) once backend endpoints are stable:
+   - Use the `AutoForm` component as a starting point for designer forms.
+   - Wire form submission to the Supabase function and surface errors/success.
+
+4. Add tests & CI improvements:
+   - Add unit tests for Zod schemas and integration tests for the Supabase functions.
+   - Expand `.github/workflows/ci.yml` to run tests.
+
+5. Secrets & deployment:
+   - Store `SUPABASE_SERVICE_ROLE_KEY` and `DISCORD_TOKEN` in your CI secrets and production environment securely.
+
+## Actionable Checklist (short)
+
+- [x] Initialize monorepo scaffold and shared schemas
+- [x] Add Supabase migration
+- [x] Add AutoForm component
+- [x] Add Supabase Echo function example
+- [x] Run `pnpm install`
+- [x] Commit and push scaffold
+- [ ] Implement TypeScript Discord bot in `apps/bot`
+- [ ] Implement production Supabase functions and Typesense sync
+- [ ] Build Forge UI and wire to backend
+
+---
+
+File created: `docs/GAME_BOT_TECHNICAL_SPECS.md`
+
+If you want, I can now scaffold the TypeScript bot implementation in `apps/bot` (recommended next step) or scaffold a Next.js starter app in `apps/forge`. Which should I do next?
+</file>
+
+<file path="packages/shared/schemas/item.ts">
+import { z } from 'zod';
+
+export const RarityEnum = z.enum(['Common', 'Uncommon', 'Rare', 'Legendary', 'Artifact']);
+export const SlotEnum = z.enum(['Head', 'Chest', 'MainHand', 'OffHand', 'Consumable']);
+
+export const ItemSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().min(1, "Item name is required").max(64),
+  description: z.string().max(256).describe("Flavor text for the player"),
+  iconUrl: z.string().url().optional(),
+  rarity: RarityEnum,
+  slot: SlotEnum,
+  stats: z.object({
+    attack: z.number().int().default(0),
+    defense: z.number().int().default(0),
+    speed: z.number().int().default(0),
+    weight: z.number().int().nonnegative().default(0),
+  }),
+  isTradable: z.boolean().default(true),
+  goldValue: z.number().int().nonnegative(),
+  tags: z.array(z.string()).default([]),
+});
+
+export type Item = z.infer<typeof ItemSchema>;
+</file>
+
+<file path="packages/shared/schemas/quest.ts">
+import { z } from 'zod';
+
+export const QuestObjectiveType = z.enum(['KillMob', 'CollectItem', 'VisitLocation', 'SocialInvite']);
+
+export const QuestSchema = z.object({
+  id: z.string().uuid().optional(),
+  title: z.string().min(5),
+  introText: z.string(),
+  completionText: z.string(),
+  levelRequirement: z.number().int().min(1).default(1),
+  minPartySize: z.number().int().min(1).default(1).describe("Forces social interaction for high-tier quests"),
+  objectives: z.array(z.object({
+    id: z.string().uuid().optional(),
+    type: QuestObjectiveType,
+    targetId: z.string().describe("ID of Mob, Item, or Location"),
+    count: z.number().int().min(1),
+    description: z.string().describe("User-facing objective text"),
+  })).min(1),
+  rewards: z.object({
+    xp: z.number().int(),
+    softCurrency: z.number().int().describe("Gold earned"),
+    hardCurrency: z.number().int().describe("Gems (Premium)"),
+    items: z.array(z.string().uuid()).optional(),
+  }),
+});
+
+export type Quest = z.infer<typeof QuestSchema>;
+</file>
+
+<file path="packages/shared/index.ts">
+export * from './schemas/item';
+export * from './schemas/quest';
+</file>
+
+<file path="packages/shared/package.json">
+{
+  "name": "@nexus/shared",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "license": "MIT",
+  "dependencies": {
+    "zod": "^3.22.4"
+  }
+}
+</file>
+
+<file path="supabase/migrations/20251207000000_init_nexus.sql">
+-- 1. UUID Support
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 2. Enumerations (Matching Zod)
+CREATE TYPE item_rarity AS ENUM ('Common', 'Uncommon', 'Rare', 'Legendary', 'Artifact');
+CREATE TYPE item_slot AS ENUM ('Head', 'Chest', 'MainHand', 'OffHand', 'Consumable');
+
+-- 3. Items Table (JSONB for flexibility with the Logic Engine)
+CREATE TABLE public.items (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL CHECK (char_length(name) >= 1),
+    description TEXT,
+    icon_url TEXT,
+    rarity item_rarity NOT NULL DEFAULT 'Common',
+    slot item_slot NOT NULL,
+    stats JSONB NOT NULL DEFAULT '{"attack": 0, "defense": 0, "speed": 0, "weight": 0}'::jsonb,
+    abilities JSONB DEFAULT '[]'::jsonb,
+    is_tradable BOOLEAN DEFAULT true,
+    gold_value INTEGER NOT NULL DEFAULT 0 CHECK (gold_value >= 0),
+    tags TEXT[] DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 4. Quests Table
+CREATE TABLE public.quests (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title TEXT NOT NULL CHECK (char_length(title) >= 5),
+    intro_text TEXT NOT NULL,
+    completion_text TEXT NOT NULL,
+    level_requirement INTEGER DEFAULT 1 CHECK (level_requirement > 0),
+    min_party_size INTEGER DEFAULT 1 CHECK (min_party_size > 0),
+    objectives JSONB NOT NULL,
+    rewards JSONB NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 5. Performance Indexes
+CREATE INDEX idx_items_updated_at ON public.items(updated_at);
+CREATE INDEX idx_items_rarity ON public.items(rarity);
+
+-- 6. Row Level Security
+ALTER TABLE public.items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.quests ENABLE ROW LEVEL SECURITY;
+
+-- Public Read Access (Game Logic needs to read)
+CREATE POLICY "Public items are viewable by everyone" 
+ON public.items FOR SELECT USING (true);
+
+-- Admin Write Access (Only 'The Forge' GUI can write)
+CREATE POLICY "Admins can insert items" 
+ON public.items FOR INSERT 
+WITH CHECK (auth.jwt() ->> 'role' = 'service_role');
+
+CREATE POLICY "Admins can update items" 
+ON public.items FOR UPDATE
+USING (auth.jwt() ->> 'role' = 'service_role');
+</file>
+
+<file path=".gitignore">
+node_modules
+.env
+.DS_Store
+dist
+.turbo
+pnpm-lock.yaml
+</file>
+
+<file path="package.json">
+{
+  "name": "nexus-core",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "supabase/functions/*"
+  ],
+  "scripts": {
+    "dev": "echo \"Run individual app dev commands from their folders\"",
+    "lint": "eslint . || true"
+  }
+}
+</file>
+
+<file path="pnpm-workspace.yaml">
+packages:
+  - 'apps/*'
+  - 'packages/*'
+  - 'supabase/functions/*'
+</file>
+
+<file path="apps/bot/src/index.ts">
+import 'dotenv/config';
+import { Client, GatewayIntentBits } from 'discord.js';
+import { ItemSchema } from '@nexus/shared';
+
+const token = process.env.DISCORD_TOKEN;
+if (!token) {
+  console.error('Missing DISCORD_TOKEN in environment');
+  process.exit(1);
+}
+
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
+
+client.once('ready', () => {
+  console.log(`Logged in as ${client.user?.tag}`);
+});
+
+client.on('messageCreate', async (message) => {
+  if (message.author.bot) return;
+
+  const prefix = '!createitem ';
+  if (!message.content.startsWith(prefix)) return;
+
+  const payload = message.content.slice(prefix.length).trim();
+  try {
+    const json = JSON.parse(payload);
+    const parsed = ItemSchema.safeParse(json);
+    if (!parsed.success) {
+      await message.reply('Validation failed: ' + JSON.stringify(parsed.error.format()));
+      return;
+    }
+
+    // If SUPABASE_FUNCTION_URL is set, forward the validated item to the Edge Function
+    const fnUrl = process.env.SUPABASE_FUNCTION_URL;
+    if (fnUrl) {
+      try {
+        const resp = await fetch(fnUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(parsed.data),
+        });
+        const json = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          await message.reply('Failed to create item: ' + (json.error || resp.statusText));
+          console.error('Function error:', resp.status, json);
+        } else {
+          await message.reply('Item created via Supabase function.');
+          console.log('Create function response:', json);
+        }
+      } catch (err) {
+        await message.reply('Error calling Supabase function: ' + String(err));
+        console.error('Error calling function:', err);
+      }
+    } else {
+      await message.reply('Item validated successfully (local).');
+      console.log('Validated item:', parsed.data);
+    }
+  } catch (err) {
+    await message.reply('Invalid JSON payload: ' + String(err));
+  }
+});
+
+client.login(token).catch((err) => {
+  console.error('Failed to login:', err);
+  process.exit(1);
+});
+</file>
+
+<file path="apps/bot/.env.example">
+DISCORD_TOKEN=your_discord_bot_token_here
+SUPABASE_FUNCTION_URL=http://localhost:54321/functions/v1/create_item
+</file>
+
+<file path="apps/bot/package.json">
+{
+  "name": "@nexus/bot",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.11.0",
+    "dotenv": "^16.3.1",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.5.0",
+    "@types/node": "^20.5.1"
+  }
+}
+</file>
+
+<file path="apps/bot/README.md">
+# Gateway Sentinel (Bot) - Quickstart
+
+This is a minimal TypeScript Discord bot scaffold for Project Nexus Core.
+
+Requirements:
+- `DISCORD_TOKEN` in environment
+- `pnpm` and workspace dependencies installed
+
+Run locally:
+
+```bash
+cp apps/bot/.env.example .env
+# set DISCORD_TOKEN in .env
+pnpm --filter @nexus/bot dev
+```
+
+Command usage (example):
+Send a message in a server channel the bot can see:
+
+```
+!createitem {"name":"Short Sword","description":"A basic blade","rarity":"Common","slot":"MainHand","goldValue":10}
+```
+
+The bot validates the JSON payload against `@nexus/shared` `ItemSchema` and echoes success or validation errors.
+Gateway Sentinel (Node.js) - Discord bot. Implement the Discord gateway client here.
+
+This is a placeholder README for the bot app.
+</file>
+
+<file path="apps/forge/package.json">
+{
+  "name": "@nexus/forge",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "^14.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "@types/react": "^18.2.21",
+    "@types/node": "^20.5.1"
+  }
+}
+</file>
+
+<file path="supabase/functions/create_item/index.ts">
+// Supabase Edge Function: validate payload with shared Zod schema and persist to Postgres via REST
+// Deploy with: `supabase functions deploy create_item`
+
+import { ItemSchema } from '../../../packages/shared/index.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.35.0';
+
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
+const SUPABASE_SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+
+// Simple in-memory metrics for this function instance (reset on deploy)
+const metrics = {
+  processed: 0,
+  successes: 0,
+  validation_errors: 0,
+  db_errors: 0,
+};
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE, {
+  auth: { persistSession: false },
+});
+
+function logInfo(msg: string, meta?: any) {
+  console.info('[create_item] ' + msg, meta ?? '');
+}
+
+function logError(msg: string, meta?: any) {
+  console.error('[create_item] ' + msg, meta ?? '');
+}
+
+export default async function (req: Request) {
+  metrics.processed += 1;
+  logInfo('Request received');
+
+  try {
+    const body = await req.json().catch(() => ({}));
+
+    // Validate using the shared Zod schema
+    const parsed = ItemSchema.safeParse(body);
+    if (!parsed.success) {
+      metrics.validation_errors += 1;
+      logInfo('Validation failed', parsed.error.format());
+      return new Response(JSON.stringify({ ok: false, error: 'validation', details: parsed.error.format(), metrics }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) {
+      logError('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+      return new Response(JSON.stringify({ ok: false, error: 'missing_env', message: 'SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set', metrics }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const item = parsed.data;
+    const payload = {
+      name: item.name,
+      description: item.description ?? null,
+      icon_url: item.iconUrl ?? null,
+      rarity: item.rarity,
+      slot: item.slot,
+      stats: item.stats,
+      abilities: [],
+      is_tradable: item.isTradable ?? true,
+      gold_value: item.goldValue ?? 0,
+      tags: item.tags ?? [],
+    };
+
+    // Insert using supabase-js client
+    const { data, error } = await supabase.from('items').insert([payload]).select();
+    if (error) {
+      metrics.db_errors += 1;
+      // Unique constraint handling
+      const isUniqueViolation = String(error.message || '').toLowerCase().includes('duplicate') || error.code === '23505';
+      logError('DB insert error', { error });
+      return new Response(JSON.stringify({ ok: false, error: 'db_insert', details: error, unique_violation: isUniqueViolation, metrics }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    metrics.successes += 1;
+    logInfo('Item inserted', { result: data });
+    return new Response(JSON.stringify({ ok: true, result: data, metrics }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (err) {
+    metrics.db_errors += 1;
+    logError('Unhandled error', err);
+    return new Response(JSON.stringify({ ok: false, error: String(err), metrics }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+</file>
+
+<file path="supabase/functions/README.md">
+This folder contains Supabase Edge Functions (Deno) for Project Nexus Core.
+
+create_item function:
+- Validates incoming payload against `@nexus/shared` `ItemSchema`.
+- Persists to the `items` table via PostgREST using `SUPABASE_SERVICE_ROLE_KEY`.
+
+Environment variables required when running locally or in deployment:
+- `SUPABASE_URL` (e.g., `http://localhost:54321` for local stack)
+- `SUPABASE_SERVICE_ROLE_KEY` (service role key for server-side inserts)
+
+Notes about the implementation:
+- The `create_item` function uses `@supabase/supabase-js` (imported from a CDN) to interact with the Postgres `items` table.
+- The function validates payloads using the shared Zod schema (`@nexus/shared`).
+- Basic in-memory metrics are tracked per function instance: `processed`, `successes`, `validation_errors`, and `db_errors` and are returned in function responses for debugging.
+- The function returns structured errors and attempts to detect unique constraint violations (e.g., Postgres `23505`).
+
+Logging & observability:
+- The function logs informational messages and errors to stdout (capturable by your function host logs).
+- For production, integrate with a metrics/observability backend (e.g., Prometheus, Datadog) instead of in-memory counters.
+
+Deploy with:
+```bash
+supabase functions deploy create_item
+```
+</file>
+
+<file path="README.md">
+<<<<<<< HEAD
+# Project Nexus Core: Next-Gen Discord Game Bot
+
+A high-retention, social-first RPG bot leveraging hybrid serverless architecture.
+
+See `docs/` for detailed design and implementation notes.
+
+Getting started:
+
+1. Install dependencies: `pnpm install`
+2. Start local infra: `supabase start`
+3. Reset DB: `supabase db reset`
+=======
+# gamebot
+>>>>>>> origin/main
+# Project Nexus Core: Next-Gen Discord Game Bot
+
+A high-retention, social-first RPG bot leveraging hybrid serverless architecture.
+
+See `docs/` for detailed design and implementation notes.
+
+Getting started:
+
+1. Install dependencies: `pnpm install`
+2. Start local infra: `supabase start`
+3. Reset DB: `supabase db reset`
+</file>
+
+</files>
