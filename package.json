@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "dev": "echo \"Run individual app dev commands from their folders\"",
+    "dev:bot": "pnpm --filter @nexus/bot dev",
     "lint": "eslint . || true"
   }
 }
