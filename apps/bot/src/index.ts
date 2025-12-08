@@ -29,9 +29,31 @@ client.on('messageCreate', async (message) => {
       return;
     }
 
-    // TODO: send to Supabase function or DB. For now, echo confirmation.
-    await message.reply('Item validated successfully (local).');
-    console.log('Validated item:', parsed.data);
+    // If SUPABASE_FUNCTION_URL is set, forward the validated item to the Edge Function
+    const fnUrl = process.env.SUPABASE_FUNCTION_URL;
+    if (fnUrl) {
+      try {
+        const resp = await fetch(fnUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(parsed.data),
+        });
+        const json = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          await message.reply('Failed to create item: ' + (json.error || resp.statusText));
+          console.error('Function error:', resp.status, json);
+        } else {
+          await message.reply('Item created via Supabase function.');
+          console.log('Create function response:', json);
+        }
+      } catch (err) {
+        await message.reply('Error calling Supabase function: ' + String(err));
+        console.error('Error calling function:', err);
+      }
+    } else {
+      await message.reply('Item validated successfully (local).');
+      console.log('Validated item:', parsed.data);
+    }
   } catch (err) {
     await message.reply('Invalid JSON payload: ' + String(err));
   }
